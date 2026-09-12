@@ -227,6 +227,16 @@ export const prepareErrorResponse = (error: AppError | DBError) => {
             };
         }
 
+        case AUTH_ERROR.DEV_LOGIN_DISABLED: {
+            return {
+                code: 404,
+                response: {
+                    code,
+                    message: 'Password-less dev login is disabled',
+                },
+            };
+        }
+
         default:
             return {
                 code: 500,

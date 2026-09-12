@@ -24,6 +24,13 @@ nodekit.ctx.log('AppConfig details', {
     appDevMode,
 });
 
+if (nodekit.config.devLoginEnabled) {
+    nodekit.ctx.logWarn(
+        'AUTH_DEV_LOGIN_ENABLED is on: anybody can sign in as any user by email without a password. ' +
+            'It is meant for local and test stacks only and must never be enabled in production.',
+    );
+}
+
 const {dynamicFeaturesEndpoint} = nodekit.config;
 
 if (dynamicFeaturesEndpoint) {

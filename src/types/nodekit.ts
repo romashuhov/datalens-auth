@@ -30,6 +30,7 @@ export interface PlatformAppConfig {
 
     manageLocalUsersDisabled: boolean;
     signupDisabled: boolean;
+    devLoginEnabled: boolean;
 
     oidc: OidcConfig;
 }

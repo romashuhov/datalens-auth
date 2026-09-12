@@ -1,3 +1,4 @@
+import {devSigninController} from './dev-signin';
 import {logoutController} from './logout';
 import {oidcCallbackController} from './oidc-callback';
 import {oidcLoginController} from './oidc-login';
@@ -10,6 +11,7 @@ export default {
     logoutController,
     refreshController,
     signinController,
+    devSigninController,
     oidcLoginController,
     oidcCallbackController,
 };

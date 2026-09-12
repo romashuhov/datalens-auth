@@ -95,6 +95,13 @@ export function getRoutes(_nodekit: NodeKit, options: GetRoutesOptions) {
             write: true,
         }),
 
+        devSignin: makeRoute({
+            route: 'POST /dev/signin',
+            handler: auth.devSigninController,
+            authPolicy: AuthPolicy.disabled,
+            write: true,
+        }),
+
         oidcLogin: makeRoute({
             route: 'GET /oidc/login',
             handler: auth.oidcLoginController,

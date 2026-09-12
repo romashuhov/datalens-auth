@@ -103,6 +103,7 @@ export default {
 
     manageLocalUsersDisabled: isTrueArg(getEnvVariable('AUTH_MANAGE_LOCAL_USERS_DISABLED')),
     signupDisabled: isTrueArg(getEnvVariable('AUTH_SIGNUP_DISABLED')),
+    devLoginEnabled: isTrueArg(getEnvVariable('AUTH_DEV_LOGIN_ENABLED')),
 
     features,
 } satisfies Partial<AppConfig>;
