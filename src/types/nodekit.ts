@@ -3,6 +3,7 @@ import type {UserRole} from '../constants/role';
 import type {Registry} from '../registry';
 
 import type {PlatformCtxInfo, PlatformCtxUser} from './ctx';
+import type {OidcConfig} from './oidc';
 
 export interface PlatformAppConfig {
     features: FeaturesConfig;
@@ -29,6 +30,8 @@ export interface PlatformAppConfig {
 
     manageLocalUsersDisabled: boolean;
     signupDisabled: boolean;
+
+    oidc: OidcConfig;
 }
 
 export interface PlatformAppDynamicConfig {

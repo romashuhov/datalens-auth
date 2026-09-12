@@ -156,6 +156,77 @@ export const prepareErrorResponse = (error: AppError | DBError) => {
             };
         }
 
+        case AUTH_ERROR.OIDC_DISABLED: {
+            return {
+                code: 404,
+                response: {
+                    code,
+                    message: 'SSO (OIDC) is disabled',
+                },
+            };
+        }
+
+        case AUTH_ERROR.OIDC_MISCONFIGURED: {
+            return {
+                code: 500,
+                response: {
+                    code,
+                    message: 'SSO (OIDC) is not configured properly',
+                },
+            };
+        }
+
+        case AUTH_ERROR.OIDC_PROVIDER_UNAVAILABLE: {
+            return {
+                code: 502,
+                response: {
+                    code,
+                    message: 'The identity provider is unavailable',
+                },
+            };
+        }
+
+        case AUTH_ERROR.OIDC_INVALID_TRANSACTION: {
+            return {
+                code: 400,
+                response: {
+                    code,
+                    message: 'The SSO sign in request is expired or invalid, please try again',
+                },
+            };
+        }
+
+        case AUTH_ERROR.OIDC_AUTHORIZATION_FAILED: {
+            return {
+                code: 401,
+                response: {
+                    code,
+                    message: 'The identity provider rejected the sign in request',
+                },
+            };
+        }
+
+        case AUTH_ERROR.OIDC_INVALID_CLAIMS: {
+            return {
+                code: 400,
+                response: {
+                    code,
+                    message,
+                },
+            };
+        }
+
+        case AUTH_ERROR.OIDC_GROUP_NOT_ALLOWED: {
+            return {
+                code: 403,
+                response: {
+                    code,
+                    message:
+                        'Access is denied: your account is not a member of a group allowed to sign in to DataLens',
+                },
+            };
+        }
+
         default:
             return {
                 code: 500,

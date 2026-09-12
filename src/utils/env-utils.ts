@@ -31,6 +31,20 @@ export function getEnvTokenVariable(envTokenVariableName: string) {
     return [valueFromEnv.trim()];
 }
 
+export function getEnvListVariable(envVariableName: string) {
+    const LIST_SEPARATOR = ',';
+    const valueFromEnv = getEnvVariable(envVariableName);
+
+    if (!valueFromEnv) {
+        return [];
+    }
+
+    return valueFromEnv
+        .split(LIST_SEPARATOR)
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
 const TRUE_FLAGS = ['1', 'true', true];
 
 export function isTrueArg(arg: any): boolean {

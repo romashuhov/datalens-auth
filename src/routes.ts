@@ -95,6 +95,18 @@ export function getRoutes(_nodekit: NodeKit, options: GetRoutesOptions) {
             write: true,
         }),
 
+        oidcLogin: makeRoute({
+            route: 'GET /oidc/login',
+            handler: auth.oidcLoginController,
+            authPolicy: AuthPolicy.disabled,
+        }),
+        oidcCallback: makeRoute({
+            route: 'GET /oidc/callback',
+            handler: auth.oidcCallbackController,
+            authPolicy: AuthPolicy.disabled,
+            write: true,
+        }),
+
         addUsersRoles: makeRoute({
             route: 'POST /v1/management/users/roles/add',
             handler: management.addUsersRolesController,

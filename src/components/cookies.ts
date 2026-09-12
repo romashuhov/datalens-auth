@@ -5,11 +5,16 @@ import jwt from 'jsonwebtoken';
 
 import {AUTH_DEFAULT_COOKIE_NAME} from '../constants/cookie';
 import {AUTH_ERROR} from '../constants/error-constants';
+import type {OidcTransactionData} from '../types/oidc';
 import {AccessTokenPayload} from '../types/token';
 import type {Optional} from '../utils/utility-types';
 
 type Tokens = {accessToken: string; refreshToken: string};
 type SameSite = boolean | 'lax' | 'strict' | 'none';
+
+const OIDC_COOKIE_POSTFIX = 'oidc';
+const OIDC_TRANSACTION_TTL_SEC = 60 * 10; // 10 min
+const OIDC_TRANSACTION_TOKEN_ALGORITHM = 'PS256';
 
 const LOCALHOST = ['localhost', '127.0.0.1', '[::1]'];
 const LOCALHOST_WILDCARD = '.localhost'; // RFC-6761: https://www.rfc-editor.org/rfc/rfc6761.html#section-6.3
@@ -92,6 +97,79 @@ export const getAuthCookies = (req: Request) => {
         authCookie: parsedAuthCookie,
         authExpCookie: parsedAuthExpCookie,
     };
+};
+
+export const getOidcTransactionCookieName = (ctx: AppContext) =>
+    generateCookieName(ctx, OIDC_COOKIE_POSTFIX);
+
+/**
+ * The oidc transaction cookie is read on the request that the identity provider redirects to,
+ * so it must not be `SameSite=Strict`, otherwise the browser will not send it back.
+ */
+function getOidcTransactionCookieOptions(req: Request) {
+    const baseCookieOptions = getBaseCookieOptions(req);
+
+    return {
+        ...baseCookieOptions,
+        sameSite: (baseCookieOptions.sameSite === 'none' ? 'none' : 'lax') as SameSite,
+        httpOnly: true,
+    };
+}
+
+export const setOidcTransactionCookie = ({
+    req,
+    res,
+    transaction,
+}: {
+    req: Request;
+    res: Response;
+    transaction: OidcTransactionData;
+}) => {
+    const ctx = req.ctx;
+
+    const token = jwt.sign(transaction, ctx.config.tokenPrivateKey, {
+        algorithm: OIDC_TRANSACTION_TOKEN_ALGORITHM,
+        expiresIn: `${OIDC_TRANSACTION_TTL_SEC}s`,
+    });
+
+    res.cookie(getOidcTransactionCookieName(ctx), token, {
+        ...getOidcTransactionCookieOptions(req),
+        maxAge: OIDC_TRANSACTION_TTL_SEC * 1000,
+    });
+};
+
+export const getOidcTransactionCookie = (req: Request): Optional<OidcTransactionData> => {
+    const ctx = req.ctx;
+    const token = req.cookies[getOidcTransactionCookieName(ctx)] as Optional<string>;
+
+    if (!token) {
+        return undefined;
+    }
+
+    try {
+        const payload = jwt.verify(token, ctx.config.tokenPublicKey, {
+            algorithms: [OIDC_TRANSACTION_TOKEN_ALGORITHM],
+        }) as OidcTransactionData;
+
+        if (!payload.state || !payload.nonce) {
+            return undefined;
+        }
+
+        return {
+            state: payload.state,
+            nonce: payload.nonce,
+            codeVerifier: payload.codeVerifier,
+        };
+    } catch (err) {
+        ctx.logError('Failed to parse oidc transaction cookie', err);
+        return undefined;
+    }
+};
+
+export const clearOidcTransactionCookie = (req: Request, res: Response) => {
+    const cookieName = getOidcTransactionCookieName(req.ctx);
+
+    res.clearCookie(cookieName, getOidcTransactionCookieOptions(req)).clearCookie(cookieName);
 };
 
 export const clearAuthCookies = (req: Request, res: Response) => {

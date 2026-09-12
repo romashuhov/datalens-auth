@@ -3,12 +3,62 @@ import type {AppConfig} from '@gravity-ui/nodekit';
 
 import {Feature, FeaturesConfig} from '../components/features/types';
 import {MASTER_TOKEN_HEADER} from '../constants/header';
+import {
+    DEFAULT_OIDC_EMAIL_CLAIM,
+    DEFAULT_OIDC_GROUPS_CLAIM,
+    DEFAULT_OIDC_IDP_SLUG,
+    DEFAULT_OIDC_SCOPES,
+} from '../constants/idp';
 import {UserRole} from '../constants/role';
-import {getEnvCert, getEnvTokenVariable, getEnvVariable, isTrueArg} from '../utils/env-utils';
+import type {OidcConfig} from '../types/oidc';
+import {
+    getEnvCert,
+    getEnvListVariable,
+    getEnvTokenVariable,
+    getEnvVariable,
+    isTrueArg,
+} from '../utils/env-utils';
 
 export const features: FeaturesConfig = {
     [Feature.ReadOnlyMode]: false,
     [Feature.UseIpV6]: false,
+};
+
+const defaultRole = UserRole.Viewer;
+
+const getOidcDefaultRole = (enabled: boolean): `${UserRole}` => {
+    const role = getEnvVariable('OIDC_DEFAULT_ROLE');
+
+    if (!role) {
+        return defaultRole;
+    }
+
+    const knownRoles: string[] = Object.values(UserRole);
+
+    if (enabled && !knownRoles.includes(role)) {
+        throw new Error(
+            `Unknown OIDC_DEFAULT_ROLE value '${role}', expected one of: ${knownRoles.join(', ')}`,
+        );
+    }
+
+    return role as `${UserRole}`;
+};
+
+const oidcEnabled = isTrueArg(getEnvVariable('OIDC_ENABLED'));
+
+const oidc: OidcConfig = {
+    enabled: oidcEnabled,
+    issuer: getEnvVariable('OIDC_ISSUER') ?? '',
+    clientId: getEnvVariable('OIDC_CLIENT_ID') ?? '',
+    clientSecret: getEnvVariable('OIDC_CLIENT_SECRET') ?? '',
+    redirectUri: getEnvVariable('OIDC_REDIRECT_URI') ?? '',
+    scopes: getEnvVariable('OIDC_SCOPES') ?? DEFAULT_OIDC_SCOPES,
+    defaultRole: getOidcDefaultRole(oidcEnabled),
+    groupsClaim: getEnvVariable('OIDC_GROUPS_CLAIM') ?? DEFAULT_OIDC_GROUPS_CLAIM,
+    emailClaim: getEnvVariable('OIDC_EMAIL_CLAIM') ?? DEFAULT_OIDC_EMAIL_CLAIM,
+    allowedGroups: getEnvListVariable('OIDC_ALLOWED_GROUPS'),
+    linkLocalByEmail: isTrueArg(getEnvVariable('OIDC_LINK_LOCAL_BY_EMAIL')),
+    idpSlug: getEnvVariable('OIDC_IDP_SLUG') ?? DEFAULT_OIDC_IDP_SLUG,
 };
 
 export default {
@@ -27,7 +77,9 @@ export default {
 
     appAuthPolicy: AuthPolicy.required,
 
-    defaultRole: UserRole.Viewer,
+    defaultRole,
+
+    oidc,
 
     uiAppEndpoint: getEnvVariable('UI_APP_ENDPOINT'),
     authCookieEndpoint: getEnvVariable('AUTH_COOKIE_ENDPOINT'),
